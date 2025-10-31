@@ -1,20 +1,47 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import {
+  StyleSheet,
+  SafeAreaView,
+  View,
+} from 'react-native';
+
+// Import screens
+import LibraryScreen from './screens/LibraryScreen';
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
+    <SafeAreaView style={styles.container}>
       <StatusBar style="auto" />
-    </View>
+      <View style={styles.appContainer}>
+        <LibraryScreen />
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
     justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  appContainer: {
+    flex: 1,
+    maxWidth: 400,
+    width: '100%',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+    overflow: 'hidden',
   },
 });
