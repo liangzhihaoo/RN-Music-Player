@@ -5,18 +5,48 @@ import {
   SafeAreaView,
   View,
 } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+
+// Import navigation
+import LibraryNavigator from './navigation/LibraryNavigator';
 
 // Import screens
-import LibraryScreen from './screens/LibraryScreen';
+import NowPlayingScreen from './screens/NowPlayingScreen';
+
+// Import components
+import MiniPlayer from './components/MiniPlayer';
+
+// Import context
+import { MusicPlayerProvider } from './context/MusicPlayerContext';
+
+// Data models (shared across app)
+const SONGS = [
+  { id: '1', title: 'Bohemian Rhapsody', artist: 'Queen', duration: '5:55' },
+  { id: '2', title: 'Hotel California', artist: 'Eagles', duration: '6:30' },
+  { id: '3', title: 'Stairway to Heaven', artist: 'Led Zeppelin', duration: '8:02' },
+  { id: '4', title: 'Sweet Child O\' Mine', artist: 'Guns N\' Roses', duration: '5:03' },
+];
+
+const PLAYLISTS = [
+  { id: '1', name: 'Road Trip Mix', songIds: ['1', '2', '4'] },
+  { id: '2', name: 'Focus', songIds: ['3'] },
+  { id: '3', name: 'Classics', songIds: ['1', '2', '3', '4'] },
+];
 
 export default function App() {
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="auto" />
-      <View style={styles.appContainer}>
-        <LibraryScreen />
-      </View>
-    </SafeAreaView>
+    <MusicPlayerProvider songs={SONGS} playlists={PLAYLISTS}>
+      <NavigationContainer>
+        <SafeAreaView style={styles.container}>
+          <StatusBar style="auto" />
+          <View style={styles.appContainer}>
+            <LibraryNavigator />
+            <MiniPlayer />
+          </View>
+        </SafeAreaView>
+        <NowPlayingScreen />
+      </NavigationContainer>
+    </MusicPlayerProvider>
   );
 }
 

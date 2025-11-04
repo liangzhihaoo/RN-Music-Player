@@ -4,45 +4,29 @@ import {
   FlatList,
   View,
 } from 'react-native';
+import { useMusicPlayer } from '../context/MusicPlayerContext';
 
 // Import components
 import SongItem from '../components/SongItem';
 import PlaylistItem from '../components/PlaylistItem';
 import TabSwitcher from '../components/TabSwitcher';
 
-// Data models
-const SONGS = [
-  { id: '1', title: 'Bohemian Rhapsody', artist: 'Queen', duration: '5:55' },
-  { id: '2', title: 'Hotel California', artist: 'Eagles', duration: '6:30' },
-  { id: '3', title: 'Stairway to Heaven', artist: 'Led Zeppelin', duration: '8:02' },
-  { id: '4', title: 'Sweet Child O\' Mine', artist: 'Guns N\' Roses', duration: '5:03' },
-];
-
-const PLAYLISTS = [
-  { id: '1', name: 'Road Trip Mix', songIds: ['1', '2', '4'] },
-  { id: '2', name: 'Focus', songIds: ['3'] },
-  { id: '3', name: 'Classics', songIds: ['1', '2', '3', '4'] },
-];
-
-const LibraryScreen = () => {
+const LibraryScreen = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState('songs');
-
-  const handleSongPress = (song) => {
-    console.log('Play song:', song.title);
-  };
+  const { songs, playlists } = useMusicPlayer();
 
   const handlePlaylistPress = (playlist) => {
-    console.log('Open playlist:', playlist.name);
+    navigation.navigate('PlaylistDetail', { playlist });
   };
 
   const renderContent = () => {
     if (activeTab === 'songs') {
       return (
         <FlatList
-          data={SONGS}
+          data={songs}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <SongItem song={item} onPress={() => handleSongPress(item)} />
+            <SongItem song={item} />
           )}
           style={styles.list}
           showsVerticalScrollIndicator={false}
@@ -51,7 +35,7 @@ const LibraryScreen = () => {
     } else {
       return (
         <FlatList
-          data={PLAYLISTS}
+          data={playlists}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <PlaylistItem playlist={item} onPress={() => handlePlaylistPress(item)} />

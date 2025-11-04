@@ -1,19 +1,45 @@
 import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useMusicPlayer } from '../context/MusicPlayerContext';
 
-const SongItem = ({ song, onPress }) => (
-  <TouchableOpacity style={styles.songItem} onPress={onPress}>
-    <View style={styles.songThumbnail}>
-      <Ionicons name="musical-note" size={20} color="#666" />
-    </View>
-    <View style={styles.songInfo}>
-      <Text style={styles.songTitle}>{song.title}</Text>
-      <Text style={styles.songArtist}>{song.artist}</Text>
-    </View>
-    <Text style={styles.songDuration}>{song.duration}</Text>
-  </TouchableOpacity>
-);
+const SongItem = ({ song, songId, onPress }) => {
+  const { setCurrentSong } = useMusicPlayer();
+
+  // Get the songs array from context to resolve songId
+  const context = useMusicPlayer();
+
+  // Determine the actual song object
+  let actualSong = song;
+  if (!actualSong && songId && context.songs) {
+    actualSong = context.songs.find(s => s.id === songId);
+  }
+
+  if (!actualSong) {
+    return null;
+  }
+
+  const handlePress = () => {
+    if (onPress) {
+      onPress(actualSong);
+    } else {
+      setCurrentSong(actualSong);
+    }
+  };
+
+  return (
+    <TouchableOpacity style={styles.songItem} onPress={handlePress}>
+      <View style={styles.songThumbnail}>
+        <Ionicons name="musical-note" size={20} color="#666" />
+      </View>
+      <View style={styles.songInfo}>
+        <Text style={styles.songTitle}>{actualSong.title}</Text>
+        <Text style={styles.songArtist}>{actualSong.artist}</Text>
+      </View>
+      <Text style={styles.songDuration}>{actualSong.duration}</Text>
+    </TouchableOpacity>
+  );
+};
 
 const styles = StyleSheet.create({
   songItem: {
