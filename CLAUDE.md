@@ -23,11 +23,24 @@ npm install         # Install dependencies
 
 ## Project Structure
 
-- `App.js` - Main application component (currently shows default Expo starter screen)
-- `index.js` - Entry point that registers the root component with Expo
-- `app.json` - Expo configuration file
-- `assets/` - Static assets (icons, splash screens)
-- `package.json` - Dependencies and scripts
+```
+RN-Music-Player/
+├── App.js                 # Main application entry point with layout wrapper
+├── index.js               # Entry point that registers the root component
+├── app.json               # Expo configuration file
+├── package.json           # Dependencies and scripts
+├── assets/                # Static assets
+│   ├── icon.png
+│   ├── splash-icon.png
+│   ├── adaptive-icon.png
+│   └── favicon.png
+├── components/            # Reusable UI components
+│   ├── SongItem.js        # Individual song row component
+│   ├── PlaylistItem.js    # Individual playlist row component
+│   └── TabSwitcher.js     # Tab navigation component
+└── screens/               # Screen components
+    └── LibraryScreen.js   # Main library screen with song/playlist tabs
+```
 
 ## Technology Stack
 
@@ -63,3 +76,4 @@ This is currently a fresh Expo project with:
 - No testing framework, linting, or build tools configured yet
 - No backend or API integrations implemented
 - Ready for implementing audio playback, playlist management, and UI components
+- Use Context7 to check up-to-date docs when needed for implementing new libraries or frameworks, or adding features using them.
