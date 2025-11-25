@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useRef, useEffect } from 'react';
+import { Audio } from 'expo-av';
 
 const MusicPlayerContext = createContext();
 
@@ -18,9 +19,104 @@ export const MusicPlayerProvider = ({ children, songs = [], playlists = [] }) =>
   const [playlistDetailVisible, setPlaylistDetailVisible] = useState(false);
   const [selectedPlaylist, setSelectedPlaylist] = useState(null);
 
-  const togglePlayPause = () => {
-    setIsPlaying(!isPlaying);
-    console.log(isPlaying ? 'Pausing...' : 'Playing...');
+  // Audio playback state
+  const soundRef = useRef(null);
+  const [positionMillis, setPositionMillis] = useState(0);
+  const [durationMillis, setDurationMillis] = useState(0);
+  const [isBuffering, setIsBuffering] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Initialize audio mode
+  useEffect(() => {
+    const setupAudio = async () => {
+      try {
+        await Audio.setAudioModeAsync({
+          playsInSilentModeIOS: true,
+          staysActiveInBackground: true,
+          shouldDuckAndroid: true,
+        });
+      } catch (error) {
+        console.error('Failed to set audio mode:', error);
+        setError('Failed to initialize audio');
+      }
+    };
+
+    setupAudio();
+
+    // Cleanup on unmount
+    return () => {
+      if (soundRef.current) {
+        soundRef.current.unloadAsync();
+      }
+    };
+  }, []);
+
+  // Playback status callback
+  const onPlaybackStatusUpdate = (status) => {
+    if (status.isLoaded) {
+      setPositionMillis(status.positionMillis || 0);
+      setDurationMillis(status.durationMillis || 0);
+      setIsPlaying(status.isPlaying);
+      setIsBuffering(status.isBuffering);
+
+      // Auto-advance when song finishes
+      if (status.didJustFinish && !status.isLooping) {
+        playNextSong();
+      }
+    } else if (status.error) {
+      console.error('Playback error:', status.error);
+      setError('Playback error occurred');
+    }
+  };
+
+  // Load audio function
+  const loadAudio = async (song) => {
+    try {
+      // Unload previous sound
+      if (soundRef.current) {
+        await soundRef.current.unloadAsync();
+        soundRef.current = null;
+        setIsLoaded(false);
+      }
+
+      setError(null);
+      setIsBuffering(true);
+      setPositionMillis(0);
+      setDurationMillis(0);
+
+      // Create new sound
+      const { sound: newSound } = await Audio.Sound.createAsync(
+        { uri: song.uri },
+        { shouldPlay: false },
+        onPlaybackStatusUpdate
+      );
+
+      soundRef.current = newSound;
+      setIsBuffering(false);
+      setIsLoaded(true);
+
+      return newSound;
+    } catch (err) {
+      console.error('Error loading audio:', err);
+      setError(`Failed to load: ${song.title}`);
+      setIsBuffering(false);
+      return null;
+    }
+  };
+
+  const togglePlayPause = async () => {
+    try {
+      if (!soundRef.current || !isLoaded) return;
+
+      if (isPlaying) {
+        await soundRef.current.pauseAsync();
+      } else {
+        await soundRef.current.playAsync();
+      }
+    } catch (err) {
+      console.error('Error toggling playback:', err);
+    }
   };
 
   const openNowPlaying = () => {
@@ -45,8 +141,10 @@ export const MusicPlayerProvider = ({ children, songs = [], playlists = [] }) =>
     console.log('Closing Playlist Detail');
   };
 
-  const playPreviousSong = () => {
+  const playPreviousSong = async () => {
     if (!currentSong) return;
+
+    let previousSong = null;
 
     // If playing from a playlist, navigate within playlist
     if (currentPlaylist) {
@@ -58,22 +156,24 @@ export const MusicPlayerProvider = ({ children, songs = [], playlists = [] }) =>
 
       const currentIndex = playlistSongs.findIndex(song => song.id === currentSong.id);
       const previousIndex = currentIndex > 0 ? currentIndex - 1 : playlistSongs.length - 1;
-      setCurrentSong(playlistSongs[previousIndex]);
-      setIsPlaying(true);
-      console.log('Playing previous song in playlist:', playlistSongs[previousIndex].title);
+      previousSong = playlistSongs[previousIndex];
     } else {
       // Global navigation
       if (songs.length === 0) return;
       const currentIndex = songs.findIndex(song => song.id === currentSong.id);
       const previousIndex = currentIndex > 0 ? currentIndex - 1 : songs.length - 1;
-      setCurrentSong(songs[previousIndex]);
-      setIsPlaying(true);
-      console.log('Playing previous song:', songs[previousIndex].title);
+      previousSong = songs[previousIndex];
+    }
+
+    if (previousSong) {
+      await playSong(previousSong);
     }
   };
 
-  const playNextSong = () => {
+  const playNextSong = async () => {
     if (!currentSong) return;
+
+    let nextSong = null;
 
     // If playing from a playlist, navigate within playlist
     if (currentPlaylist) {
@@ -84,48 +184,55 @@ export const MusicPlayerProvider = ({ children, songs = [], playlists = [] }) =>
       if (playlistSongs.length === 0) return;
 
       const currentIndex = playlistSongs.findIndex(song => song.id === currentSong.id);
-      const nextIndex = currentIndex < songs.length - 1 ? currentIndex + 1 : 0;
-      setCurrentSong(playlistSongs[nextIndex]);
-      setIsPlaying(true);
-      console.log('Playing next song in playlist:', playlistSongs[nextIndex].title);
+      const nextIndex = (currentIndex + 1) % playlistSongs.length;
+      nextSong = playlistSongs[nextIndex];
     } else {
       // Global navigation
       if (songs.length === 0) return;
       const currentIndex = songs.findIndex(song => song.id === currentSong.id);
-      const nextIndex = currentIndex < songs.length - 1 ? currentIndex + 1 : 0;
-      setCurrentSong(songs[nextIndex]);
-      setIsPlaying(true);
-      console.log('Playing next song:', songs[nextIndex].title);
+      const nextIndex = (currentIndex + 1) % songs.length;
+      nextSong = songs[nextIndex];
+    }
+
+    if (nextSong) {
+      await playSong(nextSong);
     }
   };
 
-  const playSong = (song) => {
-    setCurrentSong(song);
-    setIsPlaying(true);
-    console.log('Now playing:', song.title);
+  const playSong = async (song) => {
+    try {
+      setCurrentSong(song);
+      setError(null);
+
+      const loadedSound = await loadAudio(song);
+
+      if (loadedSound) {
+        await loadedSound.playAsync();
+        setIsPlaying(true);
+      }
+    } catch (err) {
+      console.error('Error playing song:', err);
+      setError('Failed to play song');
+    }
   };
 
-  const playSongFromPlaylist = (song, playlist) => {
-    setCurrentSong(song);
+  const playSongFromPlaylist = async (song, playlist) => {
     setCurrentPlaylist(playlist);
-    setIsPlaying(true);
-    console.log('Playing song from playlist:', song.title, 'in', playlist.name);
+    await playSong(song);
   };
 
-  const playPlaylist = (playlist) => {
+  const playPlaylist = async (playlist) => {
     const playlistSongs = playlist.songIds
       .map(id => songs.find(song => song.id === id))
       .filter(Boolean);
 
     if (playlistSongs.length === 0) return;
 
-    setCurrentSong(playlistSongs[0]);
     setCurrentPlaylist(playlist);
-    setIsPlaying(true);
-    console.log('Playing playlist:', playlist.name, 'from first song');
+    await playSong(playlistSongs[0]);
   };
 
-  const shufflePlaylist = (playlist) => {
+  const shufflePlaylist = async (playlist) => {
     const playlistSongs = playlist.songIds
       .map(id => songs.find(song => song.id === id))
       .filter(Boolean);
@@ -141,10 +248,17 @@ export const MusicPlayerProvider = ({ children, songs = [], playlists = [] }) =>
       songIds: shuffled.map(song => song.id),
     };
 
-    setCurrentSong(shuffled[0]);
     setCurrentPlaylist(shuffledPlaylist);
-    setIsPlaying(true);
-    console.log('Shuffling and playing playlist:', playlist.name);
+    await playSong(shuffled[0]);
+  };
+
+  const seekToPosition = async (positionMillis) => {
+    try {
+      if (!soundRef.current || !isLoaded) return;
+      await soundRef.current.setPositionAsync(positionMillis);
+    } catch (err) {
+      console.error('Error seeking:', err);
+    }
   };
 
   return (
@@ -158,10 +272,16 @@ export const MusicPlayerProvider = ({ children, songs = [], playlists = [] }) =>
         playlistDetailVisible,
         selectedPlaylist,
         playlists,
+        positionMillis,
+        durationMillis,
+        isBuffering,
+        isLoaded,
+        error,
         setCurrentSong: playSong,
         togglePlayPause,
         playPreviousSong,
         playNextSong,
+        seekToPosition,
         openNowPlaying,
         closeNowPlaying,
         openPlaylistDetail,
