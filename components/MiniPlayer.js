@@ -7,11 +7,16 @@ const MiniPlayer = () => {
   const {
     currentSong,
     isPlaying,
+    positionMillis,
+    durationMillis,
     togglePlayPause,
     playPreviousSong,
     playNextSong,
     openNowPlaying,
   } = useMusicPlayer();
+
+  // Calculate progress percentage
+  const progress = durationMillis > 0 ? (positionMillis / durationMillis) * 100 : 0;
 
   if (!currentSong) {
     return null;
@@ -21,7 +26,7 @@ const MiniPlayer = () => {
     <View style={styles.container}>
       {/* Progress Bar */}
       <View style={styles.progressBar}>
-        <View style={styles.progressFill} />
+        <View style={[styles.progressFill, { width: `${progress}%` }]} />
       </View>
 
       {/* Player Content */}
@@ -103,7 +108,6 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    width: '30%',
     backgroundColor: '#000',
   },
   content: {
