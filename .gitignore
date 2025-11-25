@@ -43,3 +43,4 @@ yarn-error.*
 # Claude Code files
 .claude/
 CLAUDE.md
+.mcp.json
