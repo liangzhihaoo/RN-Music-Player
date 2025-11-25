@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   Animated,
   PanResponder,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useMusicPlayer } from '../context/MusicPlayerContext';
@@ -20,11 +21,38 @@ const NowPlayingScreen = () => {
     currentSong,
     isPlaying,
     nowPlayingVisible,
+    positionMillis,
+    durationMillis,
+    isBuffering,
+    error,
     togglePlayPause,
     playPreviousSong,
     playNextSong,
+    seekToPosition,
     closeNowPlaying,
   } = useMusicPlayer();
+
+  const [progressBarWidth, setProgressBarWidth] = useState(0);
+
+  // Format time in mm:ss
+  const formatTime = (millis) => {
+    const totalSeconds = Math.floor(millis / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  // Calculate progress percentage
+  const progress = durationMillis > 0 ? (positionMillis / durationMillis) * 100 : 0;
+
+  // Handle progress bar press for seeking
+  const handleProgressPress = (event) => {
+    const { locationX } = event.nativeEvent;
+    if (progressBarWidth > 0 && durationMillis > 0) {
+      const position = (locationX / progressBarWidth) * durationMillis;
+      seekToPosition(position);
+    }
+  };
 
   const translateY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const panY = useRef(new Animated.Value(0)).current;
@@ -159,15 +187,23 @@ const NowPlayingScreen = () => {
 
         {/* Progress Bar */}
         <View style={styles.progressContainer}>
-          <View style={styles.progressBar}>
+          <TouchableOpacity
+            style={styles.progressBar}
+            onPress={handleProgressPress}
+            onLayout={(event) => {
+              const { width } = event.nativeEvent.layout;
+              setProgressBarWidth(width);
+            }}
+            activeOpacity={0.7}
+          >
             <View style={styles.progressTrack}>
-              <View style={styles.progressFill} />
-              <View style={styles.progressThumb} />
+              <View style={[styles.progressFill, { width: `${progress}%` }]} />
+              <View style={[styles.progressThumb, { left: `${progress}%` }]} />
             </View>
-          </View>
+          </TouchableOpacity>
           <View style={styles.timeLabels}>
-            <Text style={styles.timeText}>2:14</Text>
-            <Text style={styles.timeText}>{currentSong.duration}</Text>
+            <Text style={styles.timeText}>{formatTime(positionMillis)}</Text>
+            <Text style={styles.timeText}>{formatTime(durationMillis)}</Text>
           </View>
         </View>
 
@@ -204,6 +240,21 @@ const NowPlayingScreen = () => {
             <Ionicons name="add" size={24} color="#000" />
           </TouchableOpacity>
         </View>
+
+        {/* Loading Indicator */}
+        {isBuffering && (
+          <View style={styles.loadingOverlay}>
+            <ActivityIndicator size="large" color="#000" />
+            <Text style={styles.loadingText}>Loading...</Text>
+          </View>
+        )}
+
+        {/* Error Message */}
+        {error && (
+          <View style={styles.errorOverlay}>
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        )}
       </Animated.View>
     </Modal>
   );
@@ -283,14 +334,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     top: 0,
-    width: '40%',
     height: '100%',
     backgroundColor: '#000',
     borderRadius: 2,
   },
   progressThumb: {
     position: 'absolute',
-    left: '40%',
     top: '50%',
     width: 14,
     height: 14,
@@ -333,6 +382,39 @@ const styles = StyleSheet.create({
   },
   bottomButton: {
     padding: 8,
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: '50%',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    padding: 20,
+    borderRadius: 12,
+    marginHorizontal: 24,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#000',
+    fontWeight: '600',
+  },
+  errorOverlay: {
+    position: 'absolute',
+    bottom: 120,
+    left: 24,
+    right: 24,
+    backgroundColor: '#ff4444',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  errorText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 
