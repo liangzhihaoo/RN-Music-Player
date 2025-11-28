@@ -8,15 +8,24 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useMusicPlayer } from '../context/MusicPlayerContext';
+import { SwipeableListProvider } from '../context/SwipeableListContext';
 import SongItem from '../components/SongItem';
+import SwipeableListItem from '../components/SwipeableListItem';
 
 const PlaylistDetailScreen = ({ route, navigation }) => {
-  const { playlist } = route.params;
+  const { playlist: routePlaylist } = route.params;
   const {
+    playlists,
+    songs,
     playPlaylist,
     shufflePlaylist,
     playSongFromPlaylist,
+    removeSongFromPlaylist,
+    openDeleteConfirmation,
   } = useMusicPlayer();
+
+  // Get the live playlist from context by ID to ensure reactivity
+  const playlist = playlists.find(p => p.id === routePlaylist.id) || routePlaylist;
 
   // Set custom header title with playlist name
   useLayoutEffect(() => {
@@ -46,6 +55,15 @@ const PlaylistDetailScreen = ({ route, navigation }) => {
     playSongFromPlaylist(song, playlist);
   };
 
+  const handleDeleteSong = (songId) => {
+    const song = songs.find(s => s.id === songId);
+    if (song) {
+      openDeleteConfirmation('song', song, () => {
+        removeSongFromPlaylist(songId, playlist.id);
+      });
+    }
+  };
+
   const renderHeader = () => (
     <View style={styles.actionButtonsContainer}>
       <TouchableOpacity style={styles.actionButton} onPress={handlePlayPress}>
@@ -62,16 +80,23 @@ const PlaylistDetailScreen = ({ route, navigation }) => {
 
   return (
     <View style={styles.container}>
-      <FlatList
-        data={playlist.songIds}
-        keyExtractor={(songId) => songId}
-        renderItem={({ item: songId }) => (
-          <SongItem songId={songId} onPress={handleSongPress} />
-        )}
-        ListHeaderComponent={renderHeader}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={true}
-      />
+      <SwipeableListProvider>
+        <FlatList
+          data={playlist.songIds}
+          keyExtractor={(songId) => songId}
+          renderItem={({ item: songId }) => (
+            <SwipeableListItem
+              itemId={songId}
+              onDelete={() => handleDeleteSong(songId)}
+            >
+              <SongItem songId={songId} onPress={handleSongPress} />
+            </SwipeableListItem>
+          )}
+          ListHeaderComponent={renderHeader}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={true}
+        />
+      </SwipeableListProvider>
     </View>
   );
 };
