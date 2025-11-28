@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -9,11 +9,12 @@ import {
   PanResponder,
   Dimensions,
   ActivityIndicator,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useMusicPlayer } from '../context/MusicPlayerContext';
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useMusicPlayer } from "../context/MusicPlayerContext";
 
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const SWIPE_THRESHOLD = 100;
 
 const NowPlayingScreen = () => {
@@ -30,6 +31,7 @@ const NowPlayingScreen = () => {
     playNextSong,
     seekToPosition,
     closeNowPlaying,
+    openAddToPlaylist,
   } = useMusicPlayer();
 
   const [progressBarWidth, setProgressBarWidth] = useState(0);
@@ -39,11 +41,12 @@ const NowPlayingScreen = () => {
     const totalSeconds = Math.floor(millis / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
 
   // Calculate progress percentage
-  const progress = durationMillis > 0 ? (positionMillis / durationMillis) * 100 : 0;
+  const progress =
+    durationMillis > 0 ? (positionMillis / durationMillis) * 100 : 0;
 
   // Handle progress bar press for seeking
   const handleProgressPress = (event) => {
@@ -129,16 +132,8 @@ const NowPlayingScreen = () => {
     });
   };
 
-  const handleShuffle = () => {
-    console.log('Shuffle pressed');
-  };
-
-  const handleRepeat = () => {
-    console.log('Repeat pressed');
-  };
-
   const handleAdd = () => {
-    console.log('Add pressed');
+    openAddToPlaylist(currentSong);
   };
 
   if (!currentSong) {
@@ -156,9 +151,7 @@ const NowPlayingScreen = () => {
         style={[
           styles.container,
           {
-            transform: [
-              { translateY: Animated.add(translateY, panY) },
-            ],
+            transform: [{ translateY: Animated.add(translateY, panY) }],
           },
         ]}
         {...panResponder.panHandlers}
@@ -169,7 +162,9 @@ const NowPlayingScreen = () => {
             <Ionicons name="chevron-down" size={28} color="#000" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Now Playing</Text>
-          <View style={styles.headerSpacer} />
+          <TouchableOpacity onPress={handleAdd} style={styles.addButton}>
+            <MaterialIcons name="playlist-add" size={24} color="black" />
+          </TouchableOpacity>
         </View>
 
         {/* Album Artwork */}
@@ -209,7 +204,10 @@ const NowPlayingScreen = () => {
 
         {/* Main Controls */}
         <View style={styles.mainControls}>
-          <TouchableOpacity onPress={playPreviousSong} style={styles.controlButton}>
+          <TouchableOpacity
+            onPress={playPreviousSong}
+            style={styles.controlButton}
+          >
             <Ionicons name="play-skip-back" size={32} color="#000" />
           </TouchableOpacity>
 
@@ -223,21 +221,6 @@ const NowPlayingScreen = () => {
 
           <TouchableOpacity onPress={playNextSong} style={styles.controlButton}>
             <Ionicons name="play-skip-forward" size={32} color="#000" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Bottom Controls */}
-        <View style={styles.bottomControls}>
-          <TouchableOpacity onPress={handleShuffle} style={styles.bottomButton}>
-            <Ionicons name="shuffle" size={24} color="#000" />
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={handleRepeat} style={styles.bottomButton}>
-            <Ionicons name="repeat" size={24} color="#000" />
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={handleAdd} style={styles.bottomButton}>
-            <Ionicons name="add" size={24} color="#000" />
           </TouchableOpacity>
         </View>
 
@@ -263,14 +246,14 @@ const NowPlayingScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     paddingTop: 50,
     paddingHorizontal: 24,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: 40,
   },
   closeButton: {
@@ -279,44 +262,45 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#000',
+    fontWeight: "600",
+    color: "#000",
   },
-  headerSpacer: {
+  addButton: {
+    padding: 4,
     width: 40,
   },
   artworkContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 32,
   },
   artwork: {
     width: 300,
     height: 300,
-    backgroundColor: '#9CA3AF',
+    backgroundColor: "#9CA3AF",
     borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   artworkText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   songInfo: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 32,
   },
   songTitle: {
     fontSize: 20,
-    fontWeight: '700',
-    color: '#000',
+    fontWeight: "700",
+    color: "#000",
     marginBottom: 8,
-    textAlign: 'center',
+    textAlign: "center",
   },
   artistName: {
     fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
+    color: "#666",
+    textAlign: "center",
   },
   progressContainer: {
     marginBottom: 40,
@@ -326,40 +310,40 @@ const styles = StyleSheet.create({
   },
   progressTrack: {
     height: 4,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: "#E5E7EB",
     borderRadius: 2,
-    position: 'relative',
+    position: "relative",
   },
   progressFill: {
-    position: 'absolute',
+    position: "absolute",
     left: 0,
     top: 0,
-    height: '100%',
-    backgroundColor: '#000',
+    height: "100%",
+    backgroundColor: "#000",
     borderRadius: 2,
   },
   progressThumb: {
-    position: 'absolute',
-    top: '50%',
+    position: "absolute",
+    top: "50%",
     width: 14,
     height: 14,
-    backgroundColor: '#000',
+    backgroundColor: "#000",
     borderRadius: 7,
     marginTop: -7,
     marginLeft: -7,
   },
   timeLabels: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   timeText: {
     fontSize: 13,
-    color: '#666',
+    color: "#666",
   },
   mainControls: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     gap: 48,
     marginBottom: 48,
   },
@@ -370,27 +354,27 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#000',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#000",
+    justifyContent: "center",
+    alignItems: "center",
   },
   bottomControls: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     gap: 56,
   },
   bottomButton: {
     padding: 8,
   },
   loadingOverlay: {
-    position: 'absolute',
-    top: '50%',
+    position: "absolute",
+    top: "50%",
     left: 0,
     right: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
     padding: 20,
     borderRadius: 12,
     marginHorizontal: 24,
@@ -398,23 +382,23 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: '#000',
-    fontWeight: '600',
+    color: "#000",
+    fontWeight: "600",
   },
   errorOverlay: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 120,
     left: 24,
     right: 24,
-    backgroundColor: '#ff4444',
+    backgroundColor: "#ff4444",
     padding: 12,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
   },
   errorText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });
 
