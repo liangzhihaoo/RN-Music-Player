@@ -4,12 +4,14 @@ import {
   StyleSheet,
   SafeAreaView,
   View,
+  ActivityIndicator,
 } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 
 // Import navigation
 import LibraryNavigator from './navigation/LibraryNavigator';
+import AuthNavigator from './navigation/AuthNavigator';
 
 // Import screens
 import NowPlayingScreen from './screens/NowPlayingScreen';
@@ -18,9 +20,11 @@ import NowPlayingScreen from './screens/NowPlayingScreen';
 import MiniPlayer from './components/MiniPlayer';
 import AddToPlaylistModal from './components/AddToPlaylistModal';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
+import CreatePlaylistModal from './components/CreatePlaylistModal';
 
 // Import context
 import { MusicPlayerProvider } from './context/MusicPlayerContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 
 // Data models (shared across app)
 const SONGS = [
@@ -42,29 +46,55 @@ const SONGS = [
   { id: '16', title: 'SoundHelix Song 16', artist: 'SoundHelix', duration: '5:28', uri: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3' },
 ];
 
-const PLAYLISTS = [
-  { id: '1', name: 'Road Trip Mix', songIds: ['1', '3', '5', '7', '9', '11', '13', '15'] },
-  { id: '2', name: 'Focus', songIds: ['2', '4', '6', '8', '10'] },
-  { id: '3', name: 'All Songs', songIds: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16'] },
-];
+// Loading screen component
+const LoadingScreen = () => (
+  <View style={styles.loadingContainer}>
+    <ActivityIndicator size="large" color="#000" />
+  </View>
+);
+
+// App content component that checks auth state
+function AppContent() {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return <LoadingScreen />;
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <NavigationContainer>
+        <AuthNavigator />
+      </NavigationContainer>
+    );
+  }
+
+  // Existing app structure when authenticated
+  return (
+    <MusicPlayerProvider songs={SONGS} initialPlaylists={[]}>
+      <NavigationContainer>
+        <SafeAreaView style={styles.container}>
+          <StatusBar style="auto" />
+          <View style={styles.appContainer}>
+            <LibraryNavigator />
+            <MiniPlayer />
+          </View>
+        </SafeAreaView>
+        <NowPlayingScreen />
+        <AddToPlaylistModal />
+        <CreatePlaylistModal />
+        <DeleteConfirmationModal />
+      </NavigationContainer>
+    </MusicPlayerProvider>
+  );
+}
 
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <MusicPlayerProvider songs={SONGS} initialPlaylists={PLAYLISTS}>
-        <NavigationContainer>
-          <SafeAreaView style={styles.container}>
-            <StatusBar style="auto" />
-            <View style={styles.appContainer}>
-              <LibraryNavigator />
-              <MiniPlayer />
-            </View>
-          </SafeAreaView>
-          <NowPlayingScreen />
-          <AddToPlaylistModal />
-          <DeleteConfirmationModal />
-        </NavigationContainer>
-      </MusicPlayerProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </GestureHandlerRootView>
   );
 }
@@ -92,5 +122,11 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
     overflow: 'hidden',
+  },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
