@@ -117,9 +117,9 @@ const styles = StyleSheet.create({
   },
   deleteButtonContainer: {
     position: "absolute",
-    right: 0,
-    top: 0,
-    bottom: 0,
+    right: 1,
+    top: 1,
+    bottom: 1,
     width: DELETE_BUTTON_WIDTH,
     justifyContent: "center",
     alignItems: "center",
