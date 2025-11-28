@@ -5,6 +5,7 @@ import {
   SafeAreaView,
   View,
 } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 
 // Import navigation
@@ -15,6 +16,8 @@ import NowPlayingScreen from './screens/NowPlayingScreen';
 
 // Import components
 import MiniPlayer from './components/MiniPlayer';
+import AddToPlaylistModal from './components/AddToPlaylistModal';
+import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 
 // Import context
 import { MusicPlayerProvider } from './context/MusicPlayerContext';
@@ -47,18 +50,22 @@ const PLAYLISTS = [
 
 export default function App() {
   return (
-    <MusicPlayerProvider songs={SONGS} playlists={PLAYLISTS}>
-      <NavigationContainer>
-        <SafeAreaView style={styles.container}>
-          <StatusBar style="auto" />
-          <View style={styles.appContainer}>
-            <LibraryNavigator />
-            <MiniPlayer />
-          </View>
-        </SafeAreaView>
-        <NowPlayingScreen />
-      </NavigationContainer>
-    </MusicPlayerProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <MusicPlayerProvider songs={SONGS} initialPlaylists={PLAYLISTS}>
+        <NavigationContainer>
+          <SafeAreaView style={styles.container}>
+            <StatusBar style="auto" />
+            <View style={styles.appContainer}>
+              <LibraryNavigator />
+              <MiniPlayer />
+            </View>
+          </SafeAreaView>
+          <NowPlayingScreen />
+          <AddToPlaylistModal />
+          <DeleteConfirmationModal />
+        </NavigationContainer>
+      </MusicPlayerProvider>
+    </GestureHandlerRootView>
   );
 }
 
