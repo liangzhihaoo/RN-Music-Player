@@ -10,10 +10,12 @@ import { useMusicPlayer } from '../context/MusicPlayerContext';
 import SongItem from '../components/SongItem';
 import PlaylistItem from '../components/PlaylistItem';
 import TabSwitcher from '../components/TabSwitcher';
+import FloatingActionButton from '../components/FloatingActionButton';
+import CreatePlaylistModal from '../components/CreatePlaylistModal';
 
 const LibraryScreen = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState('songs');
-  const { songs, playlists } = useMusicPlayer();
+  const { songs, playlists, openCreatePlaylist } = useMusicPlayer();
 
   const handlePlaylistPress = (playlist) => {
     navigation.navigate('PlaylistDetail', { playlist });
@@ -51,6 +53,11 @@ const LibraryScreen = ({ navigation }) => {
     <View style={styles.container}>
       <TabSwitcher activeTab={activeTab} onTabPress={setActiveTab} />
       {renderContent()}
+      <FloatingActionButton
+        visible={activeTab === 'playlists'}
+        onPress={openCreatePlaylist}
+      />
+      <CreatePlaylistModal />
     </View>
   );
 };

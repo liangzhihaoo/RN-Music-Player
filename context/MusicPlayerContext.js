@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useRef, useEffect } from 'react';
 import { Audio } from 'expo-av';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const MusicPlayerContext = createContext();
 
@@ -11,13 +12,19 @@ export const useMusicPlayer = () => {
   return context;
 };
 
-export const MusicPlayerProvider = ({ children, songs = [], playlists = [] }) => {
+const PLAYLISTS_STORAGE_KEY = '@MusicPlayer_Playlists';
+
+export const MusicPlayerProvider = ({ children, songs = [], initialPlaylists = [] }) => {
   const [currentSong, setCurrentSong] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [nowPlayingVisible, setNowPlayingVisible] = useState(false);
   const [currentPlaylist, setCurrentPlaylist] = useState(null);
   const [playlistDetailVisible, setPlaylistDetailVisible] = useState(false);
   const [selectedPlaylist, setSelectedPlaylist] = useState(null);
+  const [playlists, setPlaylists] = useState([]);
+  const [createPlaylistVisible, setCreatePlaylistVisible] = useState(false);
+  const [addToPlaylistVisible, setAddToPlaylistVisible] = useState(false);
+  const [addToPlaylistTargetSong, setAddToPlaylistTargetSong] = useState(null);
 
   // Audio playback state
   const soundRef = useRef(null);
@@ -26,6 +33,40 @@ export const MusicPlayerProvider = ({ children, songs = [], playlists = [] }) =>
   const [isBuffering, setIsBuffering] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(null);
+
+  // Load playlists from AsyncStorage on mount
+  useEffect(() => {
+    const loadPlaylists = async () => {
+      try {
+        const storedPlaylists = await AsyncStorage.getItem(PLAYLISTS_STORAGE_KEY);
+        if (storedPlaylists) {
+          setPlaylists(JSON.parse(storedPlaylists));
+        } else {
+          setPlaylists(initialPlaylists);
+        }
+      } catch (error) {
+        console.error('Failed to load playlists:', error);
+        setPlaylists(initialPlaylists);
+      }
+    };
+
+    loadPlaylists();
+  }, []);
+
+  // Save playlists to AsyncStorage whenever they change
+  useEffect(() => {
+    const savePlaylists = async () => {
+      try {
+        await AsyncStorage.setItem(PLAYLISTS_STORAGE_KEY, JSON.stringify(playlists));
+      } catch (error) {
+        console.error('Failed to save playlists:', error);
+      }
+    };
+
+    if (playlists.length > 0) {
+      savePlaylists();
+    }
+  }, [playlists]);
 
   // Initialize audio mode
   useEffect(() => {
@@ -261,6 +302,65 @@ export const MusicPlayerProvider = ({ children, songs = [], playlists = [] }) =>
     }
   };
 
+  const openCreatePlaylist = () => {
+    setCreatePlaylistVisible(true);
+    console.log('Opening Create Playlist modal');
+  };
+
+  const closeCreatePlaylist = () => {
+    setCreatePlaylistVisible(false);
+    console.log('Closing Create Playlist modal');
+  };
+
+  const generatePlaylistId = () => {
+    return `playlist_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  };
+
+  const addPlaylist = (name) => {
+    const newPlaylist = {
+      id: generatePlaylistId(),
+      name: name.trim(),
+      songIds: [],
+    };
+    setPlaylists([...playlists, newPlaylist]);
+    console.log('Created new playlist:', newPlaylist.name);
+  };
+
+  const openAddToPlaylist = (song) => {
+    setAddToPlaylistTargetSong(song);
+    setAddToPlaylistVisible(true);
+    console.log('Opening Add to Playlist modal for:', song.title);
+  };
+
+  const closeAddToPlaylist = () => {
+    setAddToPlaylistVisible(false);
+    setAddToPlaylistTargetSong(null);
+    console.log('Closing Add to Playlist modal');
+  };
+
+  const addSongToPlaylist = (songId, playlistId) => {
+    setPlaylists(prevPlaylists =>
+      prevPlaylists.map(playlist => {
+        if (playlist.id === playlistId) {
+          if (!playlist.songIds.includes(songId)) {
+            return {
+              ...playlist,
+              songIds: [...playlist.songIds, songId]
+            };
+          }
+        }
+        return playlist;
+      })
+    );
+  };
+
+  const addSongToMultiplePlaylists = (songId, playlistIds) => {
+    playlistIds.forEach(playlistId => {
+      addSongToPlaylist(songId, playlistId);
+    });
+    console.log(`Added song ${songId} to ${playlistIds.length} playlists`);
+  };
+
   return (
     <MusicPlayerContext.Provider
       value={{
@@ -272,6 +372,9 @@ export const MusicPlayerProvider = ({ children, songs = [], playlists = [] }) =>
         playlistDetailVisible,
         selectedPlaylist,
         playlists,
+        createPlaylistVisible,
+        addToPlaylistVisible,
+        addToPlaylistTargetSong,
         positionMillis,
         durationMillis,
         isBuffering,
@@ -286,6 +389,13 @@ export const MusicPlayerProvider = ({ children, songs = [], playlists = [] }) =>
         closeNowPlaying,
         openPlaylistDetail,
         closePlaylistDetail,
+        openCreatePlaylist,
+        closeCreatePlaylist,
+        addPlaylist,
+        openAddToPlaylist,
+        closeAddToPlaylist,
+        addSongToPlaylist,
+        addSongToMultiplePlaylists,
         playSongFromPlaylist,
         playPlaylist,
         shufflePlaylist,
