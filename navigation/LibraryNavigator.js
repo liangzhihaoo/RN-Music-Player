@@ -2,6 +2,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LibraryScreen from '../screens/LibraryScreen';
 import PlaylistDetailScreen from '../screens/PlaylistDetailScreen';
+import UserInfoScreen from '../screens/UserInfoScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -19,6 +20,20 @@ const LibraryNavigator = () => {
         options={{
           headerShown: true,
           headerTitle: '',
+          headerBackTitleVisible: false,
+          headerShadowVisible: false,
+          headerStyle: {
+            backgroundColor: '#fff',
+          },
+          headerTintColor: '#000',
+        }}
+      />
+      <Stack.Screen
+        name="UserInfo"
+        component={UserInfoScreen}
+        options={{
+          headerShown: true,
+          headerTitle: 'Account',
           headerBackTitleVisible: false,
           headerShadowVisible: false,
           headerStyle: {

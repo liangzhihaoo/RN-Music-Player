@@ -3,6 +3,8 @@ import {
   StyleSheet,
   FlatList,
   View,
+  Text,
+  TouchableOpacity,
 } from 'react-native';
 import { useMusicPlayer } from '../context/MusicPlayerContext';
 import { SwipeableListProvider } from '../context/SwipeableListContext';
@@ -12,7 +14,6 @@ import SongItem from '../components/SongItem';
 import PlaylistItem from '../components/PlaylistItem';
 import TabSwitcher from '../components/TabSwitcher';
 import FloatingActionButton from '../components/FloatingActionButton';
-import CreatePlaylistModal from '../components/CreatePlaylistModal';
 import SwipeableListItem from '../components/SwipeableListItem';
 
 const LibraryScreen = ({ navigation }) => {
@@ -66,13 +67,25 @@ const LibraryScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
+      {/* Header with user icon */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Library</Text>
+        <TouchableOpacity
+          style={styles.userIconButton}
+          onPress={() => navigation.navigate('UserInfo')}
+        >
+          <View style={styles.userIcon}>
+            <Text style={styles.userIconText}>👤</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
+
       <TabSwitcher activeTab={activeTab} onTabPress={setActiveTab} />
       {renderContent()}
       <FloatingActionButton
         visible={activeTab === 'playlists'}
         onPress={openCreatePlaylist}
       />
-      <CreatePlaylistModal />
     </View>
   );
 };
@@ -80,6 +93,33 @@ const LibraryScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#fff',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#000',
+  },
+  userIconButton: {
+    padding: 4,
+  },
+  userIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#e0e0e0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  userIconText: {
+    fontSize: 20,
   },
   list: {
     flex: 1,

@@ -51,6 +51,7 @@ const CreatePlaylistModal = () => {
       transparent={true}
       animationType="fade"
       onRequestClose={handleCancel}
+      statusBarTranslucent={true}
     >
       <View style={styles.backdrop}>
         <View style={styles.container}>
@@ -99,6 +100,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    zIndex: 9999,
   },
   container: {
     backgroundColor: '#fff',
@@ -113,7 +115,8 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 4,
-    elevation: 5,
+    elevation: 999,
+    zIndex: 9999,
   },
   title: {
     fontSize: 18,
