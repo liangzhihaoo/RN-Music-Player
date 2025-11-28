@@ -15,6 +15,7 @@ import NowPlayingScreen from './screens/NowPlayingScreen';
 
 // Import components
 import MiniPlayer from './components/MiniPlayer';
+import AddToPlaylistModal from './components/AddToPlaylistModal';
 
 // Import context
 import { MusicPlayerProvider } from './context/MusicPlayerContext';
@@ -47,7 +48,7 @@ const PLAYLISTS = [
 
 export default function App() {
   return (
-    <MusicPlayerProvider songs={SONGS} playlists={PLAYLISTS}>
+    <MusicPlayerProvider songs={SONGS} initialPlaylists={PLAYLISTS}>
       <NavigationContainer>
         <SafeAreaView style={styles.container}>
           <StatusBar style="auto" />
@@ -57,6 +58,7 @@ export default function App() {
           </View>
         </SafeAreaView>
         <NowPlayingScreen />
+        <AddToPlaylistModal />
       </NavigationContainer>
     </MusicPlayerProvider>
   );
