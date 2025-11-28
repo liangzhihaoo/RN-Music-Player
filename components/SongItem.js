@@ -1,7 +1,7 @@
-import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useMusicPlayer } from '../context/MusicPlayerContext';
+import React from "react";
+import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useMusicPlayer } from "../context/MusicPlayerContext";
 
 const SongItem = ({ song, songId, onPress }) => {
   const { setCurrentSong } = useMusicPlayer();
@@ -12,7 +12,7 @@ const SongItem = ({ song, songId, onPress }) => {
   // Determine the actual song object
   let actualSong = song;
   if (!actualSong && songId && context.songs) {
-    actualSong = context.songs.find(s => s.id === songId);
+    actualSong = context.songs.find((s) => s.id === songId);
   }
 
   if (!actualSong) {
@@ -43,19 +43,20 @@ const SongItem = ({ song, songId, onPress }) => {
 
 const styles = StyleSheet.create({
   songItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: "#E5E7EB",
+    paddingEnd: 10,
   },
   songThumbnail: {
     width: 40,
     height: 40,
-    backgroundColor: '#f1f1f1',
+    backgroundColor: "#f1f1f1",
     borderRadius: 4,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: 12,
   },
   songInfo: {
@@ -63,18 +64,18 @@ const styles = StyleSheet.create({
   },
   songTitle: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
+    fontWeight: "600",
+    color: "#000",
     marginBottom: 2,
   },
   songArtist: {
     fontSize: 13,
-    color: '#666',
+    color: "#666",
   },
   songDuration: {
     fontSize: 14,
-    color: '#666',
-    fontWeight: '400',
+    color: "#666",
+    fontWeight: "400",
   },
 });
 

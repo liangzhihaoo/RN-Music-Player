@@ -25,6 +25,8 @@ export const MusicPlayerProvider = ({ children, songs = [], initialPlaylists = [
   const [createPlaylistVisible, setCreatePlaylistVisible] = useState(false);
   const [addToPlaylistVisible, setAddToPlaylistVisible] = useState(false);
   const [addToPlaylistTargetSong, setAddToPlaylistTargetSong] = useState(null);
+  const [deleteConfirmationVisible, setDeleteConfirmationVisible] = useState(false);
+  const [deleteConfirmationData, setDeleteConfirmationData] = useState(null);
 
   // Audio playback state
   const soundRef = useRef(null);
@@ -338,6 +340,16 @@ export const MusicPlayerProvider = ({ children, songs = [], initialPlaylists = [
     console.log('Closing Add to Playlist modal');
   };
 
+  const openDeleteConfirmation = (type, item, onConfirm) => {
+    setDeleteConfirmationData({ type, item, onConfirm });
+    setDeleteConfirmationVisible(true);
+  };
+
+  const closeDeleteConfirmation = () => {
+    setDeleteConfirmationVisible(false);
+    setDeleteConfirmationData(null);
+  };
+
   const addSongToPlaylist = (songId, playlistId) => {
     setPlaylists(prevPlaylists =>
       prevPlaylists.map(playlist => {
@@ -361,6 +373,39 @@ export const MusicPlayerProvider = ({ children, songs = [], initialPlaylists = [
     console.log(`Added song ${songId} to ${playlistIds.length} playlists`);
   };
 
+  const deletePlaylist = (playlistId) => {
+    // If this playlist is currently playing, stop playback
+    if (currentPlaylist?.id === playlistId) {
+      if (soundRef.current) {
+        soundRef.current.pauseAsync();
+      }
+      setCurrentSong(null);
+      setCurrentPlaylist(null);
+      setNowPlayingVisible(false);
+    }
+
+    // Remove from playlists array
+    setPlaylists(playlists.filter(p => p.id !== playlistId));
+    console.log('Deleted playlist:', playlistId);
+  };
+
+  const removeSongFromPlaylist = (songId, playlistId) => {
+    setPlaylists(playlists.map(playlist => {
+      if (playlist.id === playlistId) {
+        const updatedSongIds = playlist.songIds.filter(id => id !== songId);
+
+        // Handle if currently playing song from this playlist
+        if (currentPlaylist?.id === playlistId && currentSong?.id === songId) {
+          playNextSong(); // Auto-advance to next song
+        }
+
+        return { ...playlist, songIds: updatedSongIds };
+      }
+      return playlist;
+    }));
+    console.log(`Removed song ${songId} from playlist ${playlistId}`);
+  };
+
   return (
     <MusicPlayerContext.Provider
       value={{
@@ -375,6 +420,8 @@ export const MusicPlayerProvider = ({ children, songs = [], initialPlaylists = [
         createPlaylistVisible,
         addToPlaylistVisible,
         addToPlaylistTargetSong,
+        deleteConfirmationVisible,
+        deleteConfirmationData,
         positionMillis,
         durationMillis,
         isBuffering,
@@ -394,8 +441,12 @@ export const MusicPlayerProvider = ({ children, songs = [], initialPlaylists = [
         addPlaylist,
         openAddToPlaylist,
         closeAddToPlaylist,
+        openDeleteConfirmation,
+        closeDeleteConfirmation,
         addSongToPlaylist,
         addSongToMultiplePlaylists,
+        deletePlaylist,
+        removeSongFromPlaylist,
         playSongFromPlaylist,
         playPlaylist,
         shufflePlaylist,
